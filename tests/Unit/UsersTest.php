@@ -23,6 +23,13 @@ class UsersTest extends TestCase
     protected $rampUsers;
 
     /**
+     * Deferred task ID to be used across tests.
+     *
+     * @var string
+     */
+    private $deferredTaskId;
+
+    /**
      * Set up the test environment.
      *
      * This method initializes the Ramp API Users instance before each test is run.
@@ -103,13 +110,83 @@ class UsersTest extends TestCase
     {
         $response = $this->rampUsers->createInvite([
             'idempotency_key' => uniqid(),
-            'email' => 'test@test.com',
+            'email' => fake()->userName().'@ramp.com';,
             'first_name' => 'Test',
             'last_name' => 'User',
-            'role' => 'IT_ADMIN',
+            'role' => 'GUEST_USER',
         ]);
+
+        // Check if the response is an array
+        $this->assertIsArray($response);
 
         $this->assertArrayHasKey('id', $response);
         $this->assertIsString($response['id']);
+
+        // Store the deferred task ID for later use
+        $this->deferredTaskId = $response['id'];
+    }
+
+    public function test_users_fetch_deferred_task_status()
+    {
+        $response = $this->rampUsers->fetchDeferredTaskStatus([
+            'task_id' => $this->deferredTaskId
+        ]);
+
+        // Expected structure
+        $expectedStructure = [
+            'context' => [
+                'acting_user_id' => 'string',
+            ],
+            'data' => [
+                'user_id' => 'string',
+            ],
+            'id' => 'string',
+            'status' => 'string',
+        ];
+    
+        // $this->assertArrayStructure($expectedStructure, $response);
+
+        // // Check if the response is an array
+        // $this->assertIsArray($response);
+
+        // $this->assertArrayHasKey('context', $response);
+        // $this->assertIsArray($response['context']);
+        // $this->assertIsString($response['context']['acting_user_id']);
+
+        // $this->assertArrayHasKey('data', $response);
+        // $this->assertIsArray($response['data']);
+        // $this->assertIsString($response['data']['user_id']);
+
+        // $this->assertIsString($response['id']);
+        // $this->assertIsString($response['status']);
+    }
+
+    /**
+     * Assert that an array matches the given structure.
+     *
+     * @param array $expectedStructure
+     * @param array $array
+     * @return void
+     */
+    private function assertArrayStructure(array $expectedStructure, array $array)
+    {
+        foreach ($expectedStructure as $key => $type) {
+            $this->assertArrayHasKey($key, $array);
+    
+            if (is_array($type)) {
+                $this->assertIsArray($array[$key]);
+                $this->assertArrayStructure($type, $array[$key]);
+            } else {
+                switch ($type) {
+                    case 'string':
+                        $this->assertIsString($array[$key]);
+                        break;
+                    case 'array':
+                        $this->assertIsArray($array[$key]);
+                        break;
+                    // Add more types as needed
+                }
+            }
+        }
     }
 }
