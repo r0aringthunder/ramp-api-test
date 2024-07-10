@@ -106,7 +106,7 @@ class UsersTest extends TestCase
             'email' => 'test@test.com',
             'first_name' => 'Test',
             'last_name' => 'User',
-            'role' => 'GUEST_USER',
+            'role' => 'IT_ADMIN',
         ]);
 
         $this->assertArrayHasKey('id', $response);
