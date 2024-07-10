@@ -98,4 +98,18 @@ class UsersTest extends TestCase
             $this->assertIsString($item['last_name']);
         }
     }
+
+    public function test_users_create_invite()
+    {
+        $response = $this->rampUsers->createInvite([
+            'idempotency_key' => uniqid(),
+            'email' => 'test@test.com',
+            'first_name' => 'Test',
+            'last_name' => 'User',
+            'role' => 'GUEST_USER',
+        ]);
+
+        $this->assertArrayHasKey('id', $response);
+        $this->assertIsString($response['id']);
+    }
 }
