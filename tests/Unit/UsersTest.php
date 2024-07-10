@@ -23,6 +23,13 @@ class UsersTest extends TestCase
     protected $rampUsers;
 
     /**
+     * Invite response to be used across tests.
+     *
+     * @var array|null
+     */
+    private $userInvite;
+
+    /**
      * Set up the test environment.
      *
      * This method initializes the Ramp API Users instance before each test is run.
@@ -35,6 +42,10 @@ class UsersTest extends TestCase
         parent::setUp();
 
         $this->rampUsers = (new Ramp())->users;
+
+        if ($this->userInvite === null) {
+            $this->userInvite = $this->createUserInvite();
+        }
     }
 
     /**
@@ -97,5 +108,44 @@ class UsersTest extends TestCase
             $this->assertIsString($item['email']);
             $this->assertIsString($item['last_name']);
         }
+    }
+
+    private function createUserInvite(): array
+    {
+        return $this->rampUsers->createInvite([
+            'idempotency_key' => uniqid(),
+            'email' => fake()->userName().'@ramp.com',
+            'first_name' => 'Test',
+            'last_name' => 'User',
+            'role' => 'GUEST_USER',
+        ]);
+    }
+
+    public function test_users_create_invite()
+    {
+        $response = $this->userInvite;
+
+        $this->assertIsArray($response);
+
+        $this->assertArrayHasKey('id', $response);
+        $this->assertIsString($response['id']);
+    }
+
+    public function test_users_fetch_deferred_task_status()
+    {
+        $inviteId = $this->userInvite;
+        $response = $this->rampUsers->fetchDeferredTaskStatus($inviteId['id']);
+
+        $this->assertIsArray($response);
+
+        $this->assertArrayHasKey('context', $response);
+        $this->assertIsArray($response['context']);
+        $this->assertIsString($response['context']['acting_user_id']);
+
+        $this->assertArrayHasKey('data', $response);
+        $this->assertIsArray($response['data']);
+        $this->assertIsString($response['id']);
+
+        $this->assertIsString($response['status']);
     }
 }
