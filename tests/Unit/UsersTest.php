@@ -143,6 +143,8 @@ class UsersTest extends TestCase
             'id' => 'string',
             'status' => 'string',
         ];
+
+        $this->assertArrayStructure($expectedStructure, $response);
     
         // $this->assertArrayStructure($expectedStructure, $response);
 
